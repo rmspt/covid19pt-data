@@ -7,7 +7,7 @@ import re
 import datetime
 
 
-DAY_RECENT_FORMAT = "05-04-2020"
+DAY_RECENT_FORMAT = "12-04-2020"
 
 
 def has_recent_format(d1):
@@ -42,7 +42,7 @@ def get_report(path, f):
         date = file_path.split("-")[-1].split('.pdf')[0][-10:].replace("_", "-")
 
         if has_recent_format(date):
-            text_raw = textract.process(file_path).decode("utf-8")
+            text_raw = textract.process(file_path, language='pt', method='pdfminer').decode()
             text = process_raw_text(text_raw)
             file = {
                 "file_path": file_path,
@@ -172,7 +172,7 @@ def extract_data(reports, original_dataframe):
          confirmados_arscentro_value, obitos_arscentro_value,  # recuperados_arscentro_value,
          confirmados_arslvt_value, obitos_arslvt_value,  #recuperados_arslvt_value,
          confirmados_arsalentejo_value, obitos_arsalentejo_value, confirmados_arsalgarve_value, obitos_arsalgarve_value
-        ] = get_all_numbers_from_list(lines, "Óbitos", "Região de residência")
+        ] = get_all_numbers_from_list(lines, "Total de casos", "Região de residência")
 
 
         """ INITIAL VALUES ON LEFT """
@@ -222,21 +222,24 @@ def extract_data(reports, original_dataframe):
 
         """ CONFIRMADOS NOVOS"""
 
-        index_last_row = original_dataframe.index[original_dataframe['data'] == report["date"]].tolist()[0] - 1
-        confirmados_old = original_dataframe.loc[index_last_row]["confirmados"]
+#        index_last_row = original_dataframe.index[original_dataframe['data'] == report["date"]].tolist()[0] - 1
+        confirmados_old = original_dataframe.iloc[-1]["confirmados"]
         confirmados_novos_value = int(confirmados_value - confirmados_old)
         confirmados_novos.append(confirmados_novos_value)
 
 
         """ CONFIMADOS POR FAIXA ETARIA """
 
+        print("Numbers:", get_all_numbers_from_list(lines, "80+", "CARACTERIZAÇÃO DEMOGRÁFICA DOS CASOS CONFIRMADOS"))
+
         [confirmados_0_9_m_value, confirmados_10_19_m_value, confirmados_20_29_m_value,
          confirmados_30_39_m_value, confirmados_40_49_m_value, confirmados_50_59_m_value,
-         confirmados_60_69_m_value, confirmados_70_79_m_value, confirmados_80_plus_m_value,
+         confirmados_60_69_m_value, confirmados_70_79_m_value, confirmados_80_plus_m_value, total,
          confirmados_0_9_f_value, confirmados_10_19_f_value, confirmados_20_29_f_value,
          confirmados_30_39_f_value, confirmados_40_49_f_value, confirmados_50_59_f_value,
-         confirmados_60_69_f_value, confirmados_70_79_f_value, confirmados_80_plus_f_value,
+         confirmados_60_69_f_value, confirmados_70_79_f_value, confirmados_80_plus_f_value, total2,
         ] = get_all_numbers_from_list(lines, "80+", "CARACTERIZAÇÃO DEMOGRÁFICA DOS CASOS CONFIRMADOS")
+
 
         confirmados_m_value = sum([confirmados_0_9_m_value, confirmados_10_19_m_value, confirmados_20_29_m_value,
                                      confirmados_30_39_m_value, confirmados_40_49_m_value, confirmados_50_59_m_value,
@@ -274,10 +277,10 @@ def extract_data(reports, original_dataframe):
 
         [obitos_0_9_m_value, obitos_10_19_m_value, obitos_20_29_m_value,
          obitos_30_39_m_value, obitos_40_49_m_value, obitos_50_59_m_value,
-         obitos_60_69_m_value, obitos_70_79_m_value, obitos_80_plus_m_value,
+         obitos_60_69_m_value, obitos_70_79_m_value, obitos_80_plus_m_value, total,
          obitos_0_9_f_value, obitos_10_19_f_value, obitos_20_29_f_value,
          obitos_30_39_f_value, obitos_40_49_f_value, obitos_50_59_f_value,
-         obitos_60_69_f_value, obitos_70_79_f_value, obitos_80_plus_f_value,
+         obitos_60_69_f_value, obitos_70_79_f_value, obitos_80_plus_f_value, total2,
         ] = get_all_numbers_from_list(lines, "CARACTERIZAÇÃO DOS ÓBITOS OCORRIDOS", "Saiba mais em https://covid19.min-saude.pt/")
 
         obitos_m_value = sum([obitos_0_9_m_value, obitos_10_19_m_value, obitos_20_29_m_value,
@@ -606,7 +609,7 @@ if __name__ == '__main__':
     original_dataframe = get_dataframe_from_csv("./data.csv")
     new_dataframe = extract_data(reports, original_dataframe)
     original_dataframe = original_dataframe.iloc[original_dataframe.shape[0] - number_of_reports:]
-    test_data(original_dataframe, new_dataframe)
+   # test_data(original_dataframe, new_dataframe)
 
     # Save new line into data.csv file
     save_new_data(new_dataframe.iloc[-1])

@@ -7,10 +7,6 @@ COPY ./dgs-reports-archive ./dgs-reports-archive
 
 ADD ./data.csv /
 
-RUN pip install pandas
-
-RUN pip install numpy
-
-RUN pip install textract
+RUN pip install pandas numpy textract
 
 CMD [ "python", "extract_dataset.py" ]
